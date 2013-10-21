@@ -20,6 +20,7 @@ defined('_JEXEC') or die('Restricted access');
  *  $vmConfig -> jQuery(); // for use of jQuery
  *  Then always use the defined paths below to ensure future stability
  */
+defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 define( 'JPATH_VM_SITE', JPATH_ROOT.DS.'components'.DS.'com_virtuemart' );
 defined('JPATH_VM_ADMINISTRATOR') or define('JPATH_VM_ADMINISTRATOR', JPATH_ROOT.DS.'administrator'.DS.'components'.DS.'com_virtuemart');
 // define( 'JPATH_VM_ADMINISTRATOR', JPATH_ROOT.DS.'administrator'.DS.'components'.DS.'com_virtuemart' );
@@ -39,8 +40,6 @@ else {
 		defined ('JVM_VERSION') or define ('JVM_VERSION', 1);
 	}
 }
-
-defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 
 //This number is for obstruction, similar to the prefix jos_ of joomla it should be avoided
 //to use the standard 7, choose something else between 1 and 99, it is added to the ordernumber as counter
@@ -264,13 +263,15 @@ function vmdebug($debugdescr,$debugvalues=NULL){
 				}
 			}
 
-			if(!VmConfig::$echoDebug){
+			if(VmConfig::$echoDebug){
+				VmConfig::$maxMessageCount++;
+				echo $debugdescr;
+			} else if(VmConfig::$logDebug){
+				logInfo($debugdescr,'vmdebug');
+			}else {
 				VmConfig::$maxMessageCount++;
 				$app = JFactory::getApplication();
 				$app ->enqueueMessage('<span class="vmdebug" >vmdebug '.$debugdescr.'</span>');
-			} else {
-				VmConfig::$maxMessageCount++;
-				echo $debugdescr;
 			}
 
 		}
@@ -295,11 +296,13 @@ function vmTrace($notice,$force=FALSE){
 		echo '</pre>';
 		$body = ob_get_contents();
 		ob_end_clean();
-		if(!VmConfig::$echoDebug){
+		if(VmConfig::$echoDebug){
+			echo $notice.' <pre>'.$body.'</pre>';
+		} else if(VmConfig::$logDebug){
+			logInfo($body,$notice);
+		} else {
 			$app = JFactory::getApplication();
 			$app ->enqueueMessage($notice.' '.$body.' ');
-		} else {
-			echo $notice.' <pre>'.$body.'</pre>';
 		}
 
 	}
@@ -347,6 +350,24 @@ function vmTime($descr,$name='current'){
 }
 
 /**
+ * logInfo
+ * to help debugging Payment notification for example
+ */
+function logInfo ($text, $type = 'message') {
+
+	if (VMConfig::showDebug()) {
+		$file = JPATH_ROOT . "/logs/" . VmConfig::$logFileName . ".log";
+		$date = JFactory::getDate ();
+
+		$fp = fopen ($file, 'a');
+		fwrite ($fp, "\n\n" . $date->toFormat ('%Y-%m-%d %H:%M:%S'));
+		fwrite ($fp, "\n" . $type . ': ' . $text);
+		fclose ($fp);
+	}
+}
+
+
+/**
 * The time how long the config in the session is valid.
 * While configuring the store, you should lower the time to 10 seconds.
 * Later in a big store it maybe useful to rise this time up to 1 hr.
@@ -367,6 +388,8 @@ class VmConfig {
 	public static $maxMessageCount = 0;
 	public static $maxMessage = 100;
 	public static $echoDebug = FALSE;
+	public static $logDebug = FALSE;
+	public static $logFileName = 'vmdebug';
 
 	var $lang = FALSE;
 
@@ -378,17 +401,8 @@ class VmConfig {
 
 		if(function_exists('mb_ereg_replace')){
 			mb_regex_encoding('UTF-8');
+			mb_internal_encoding('UTF-8');
 		}
-
-
-		//todo
-		/*	if(strpos(JVERSION,'1.5') === false){
-			$jlang = JFactory::getLanguage();
-			$jlang->load('virtuemart', null, 'en-GB', true); // Load English (British)
-			$jlang->load('virtuemart', null, $jlang->getDefault(), true); // Load the site's default language
-			$jlang->load('virtuemart', null, null, true); // Load the currently selected language
-		}*/
-
 
 	}
 
@@ -434,7 +448,51 @@ class VmConfig {
 		return self::$_debug;
 	}
 
+	/**
+	 * Ensures a certain Memory limit for php (if server supports it)
+	 * @author Max Milbers
+	 * @param int $minMemory
+	 */
+	static function ensureMemoryLimit($minMemory=0){
 
+		if($minMemory === 0) $minMemory = VmConfig::get('minMemory','128M');
+		$memory_limit = VmConfig::getMemoryLimit();
+
+		if($memory_limit<$minMemory)  @ini_set( 'memory_limit', $minMemory.'M' );
+
+	}
+
+	/**
+	 * Returns the PHP memory limit of the server in MB, regardless the used unit
+	 * @author Max Milbers
+	 * @return float|int PHP memory limit in MB
+	 */
+	static function getMemoryLimit(){
+
+		$iniValue = ini_get('memory_limit');
+
+		if($iniValue===-1) return 2048;	//We assume 2048MB as unlimited setting
+		$iniValue = strtoupper($iniValue);
+		if(strpos($iniValue,'M')!==FALSE){
+			$memory_limit = (int) substr($iniValue,0,-1);
+		} else if(strpos($iniValue,'K')!==FALSE){
+			$memory_limit = (int) substr($iniValue,0,-1) / 1024.0;
+		} else if(strpos($iniValue,'G')!==FALSE){
+			$memory_limit = (int) substr($iniValue,0,-1) * 1024.0;
+		} else {
+			$memory_limit = (int) $iniValue / 1048576.0;
+		}
+		return $memory_limit;
+	}
+
+	static function ensureExecutionTime($minTime=0){
+
+		if($minTime === 0) $minTime = (int) VmConfig::get('minTime',120);
+		$max_execution_time = ini_get('max_execution_time');
+		if((int)$max_execution_time<$minTime) {
+			@ini_set( 'max_execution_time', $minTime );
+		}
+	}
 	/**
 	 * loads a language file, the trick for us is that always the config option enableEnglish is tested
 	 * and the path are already set and the correct order is used
@@ -572,7 +630,7 @@ class VmConfig {
 
 			self::$_jpConfig->set('sctime',microtime(TRUE));
 			self::$_jpConfig->set('vmlang',self::setdbLanguageTag());
-			self::$_jpConfig->setSession();
+
 			vmTime('loadConfig db '.$install,'loadConfig');
 
 			return self::$_jpConfig;
@@ -587,7 +645,7 @@ class VmConfig {
 	/*
 	 * Set defaut language tag for translatable table
 	 *
-	 * @author Patrick Kohl
+	 * @author Max Milbers
 	 * @return string valid langtag
 	 */
 	static public function setdbLanguageTag($langTag = 0) {
@@ -597,37 +655,36 @@ class VmConfig {
 		}
 
 		$langs = (array)self::$_jpConfig->get('active_languages',array());
-		$isBE = !JFactory::getApplication()->isSite();
-		if($isBE){
-			$siteLang = JRequest::getVar('vmlang',FALSE );// we must have this for edit form save
-			//Why not using the userstate?
-		} else {
-			if (!$siteLang = JRequest::getVar('vmlang',FALSE )) {
+
+		$siteLang = JRequest::getString('vmlang',FALSE );
+
+		$params = JComponentHelper::getParams('com_languages');
+		$defaultLang = $params->get('site', 'en-GB');//use default joomla
+
+		if( JFactory::getApplication()->isSite()){
+			if (!$siteLang) {
 				if ( JVM_VERSION===1 ) {
-				// try to find in session lang
-				// this work with joomfish j1.5 (application.data.lang)
-				$session  =JFactory::getSession();
-				$registry = $session->get('registry');
-				$siteLang = $registry->getValue('application.data.lang') ;
+					// try to find in session lang
+					// this work with joomfish j1.5 (application.data.lang)
+					$session  =JFactory::getSession();
+					$registry = $session->get('registry');
+					$siteLang = $registry->getValue('application.data.lang') ;
 				} else  {
-				// TODO test wiht j1.7
-				jimport('joomla.language.helper');
-				//$languages = JLanguageHelper::getLanguages('lang_code');
-				$siteLang = JFactory::getLanguage()->getTag();
+					jimport('joomla.language.helper');
+					$siteLang = JFactory::getLanguage()->getTag();
 					vmdebug('My selected language by JFactory::getLanguage()->getTag() '.$siteLang);
 				}
 			}
-		}
-
-		if ( empty( $siteLang) ) {
-			// use site default
-			$params = JComponentHelper::getParams('com_languages');
-			$siteLang = $params->get('site', 'en-GB');//use default joomla
-			vmdebug('My selected language by getParams(com_languages) '.$siteLang);
+		} else {
+			if(!$siteLang){
+				$siteLang = $defaultLang;
+			}
 		}
 
 		if(!in_array($siteLang, $langs)) {
-			if(!empty($langs[0])){
+			if(count($langs)===0){
+				$siteLang = $defaultLang;
+			} else {
 				$siteLang = $langs[0];
 			}
 		}
@@ -637,26 +694,7 @@ class VmConfig {
 		defined('VMLANG') or define('VMLANG', self::$_jpConfig->lang );
 
 		return self::$_jpConfig->lang;
-
  	}
-
-	function setSession(){
-/*		$session = JFactory::getSession();
-		$session->clear('vmconfig');
-		// 		$app = JFactory::getApplication();
-		// 		$app ->enqueueMessage('setSession session cache <pre>'.print_r(self::$_jpConfig->_params,1).'</pre>');
-
-// 		$session->set('vmconfig', base64_encode(serialize(self::$_jpConfig)),'vm');
-
-		//We must use base64 for text fields
-		$params = self::$_jpConfig->_params;
-		$params['offline_message'] = base64_encode($params['offline_message']);
-		// $params['dateformat'] = base64_encode($params['dateformat']);
-
-		$params['sctime'] = microtime(true);
-		$session->set('vmconfig', serialize($params),'vm');*/
-		self::$loaded = TRUE;
-	}
 
 	/**
 	 * Find the configuration value for a given key
@@ -706,7 +744,6 @@ class VmConfig {
 		if(Permissions::getInstance()->check('admin')){
 			if (!empty(self::$_jpConfig->_params)) {
 				self::$_jpConfig->_params[$key] = $value;
-				self::$_jpConfig->setSession();
 			}
 		}
 
@@ -956,11 +993,23 @@ class vmRequest{
  			//$source is string that will be filtered, $custom is string that contains custom characters
  			return mb_ereg_replace('[^\w'.preg_quote($custom).']', '', $source);
  		} else {
- 			return preg_replace('/[^\w'.preg_quote($custom).']/', '', $source);
+ 			//return preg_replace('/[^\w'.preg_quote($custom).']/', '', $source);	//creates error Warning: preg_replace(): Unknown modifier ']'
+			//return preg_replace('/([^\w'.preg_quote($custom).'])/', '', $source);	//Warning: preg_replace(): Unknown modifier ']'
+			//return preg_replace("[^\w".preg_quote($custom)."]", '', $source);	//This seems to work even there is no seperator, the change is just the use of " instead '
+			return preg_replace("~[^\w".preg_quote($custom,'~')."]~", '', $source);	//We use Tilde as separator, and give the preq_quote function the used separator
  		}
  	}
+}
 
+class vmURI{
 
+	static function getCleanUrl ($JURIInstance = 0,$parts = array('scheme', 'user', 'pass', 'host', 'port', 'path', 'query', 'fragment')) {
+
+		if(!class_exists('JFilterInput')) require (JPATH_VM_LIBRARIES.DS.'joomla'.DS.'filter'.DS.'input.php');
+		$_filter = JFilterInput::getInstance(array('br', 'i', 'em', 'b', 'strong'), array(), 0, 0, 1);
+		if($JURIInstance===0)$JURIInstance = JURI::getInstance();
+		return $_filter->clean($JURIInstance->toString($parts));
+	}
 }
 
 /**
@@ -1136,8 +1185,16 @@ class vmJsApi{
 
 		$closeimage = JURI::root(TRUE) .'/components/com_virtuemart/assets/images/fancybox/fancy_close.png';
 
+		$uri = JURI::getInstance();
+
 		$jsVars = "//<![CDATA[ \n";
-		$jsVars .= "vmSiteurl = '". JURI::root( ) ."' ;\n" ;
+		if(VmConfig::get('useSSL',false)){
+			$jsVars .= "vmSiteurl = '". $uri->root( true ) ."/' ;\n" ;
+		} else {
+			$jsVars .= "vmSiteurl = '". $uri->root( ) ."' ;\n" ;
+		}
+
+
 		if (VmConfig::get ('vmlang_js', 1))  {
 			//$jsVars .= "vmLang = '" . substr (VMLANG, 0, 2) . "' ;\n";
 			$jsVars .= "vmLang = '&amp;lang=" . substr (VMLANG, 0, 2) . "' ;\n";
@@ -1149,7 +1206,7 @@ class vmJsApi{
 		if(VmConfig::get('addtocart_popup',1)){
 			$jsVars .= "Virtuemart.addtocart_popup = '".VmConfig::get('addtocart_popup',1)."' ; \n";
 			if(VmConfig::get('usefancy',0)){
-				$jsVars .= "usefancy = true";
+				$jsVars .= "usefancy = true;";
 				vmJsApi::js( 'fancybox/jquery.fancybox-1.3.4.pack');
 				vmJsApi::css('jquery.fancybox-1.3.4');
 			} else {//This is just there for the backward compatibility
@@ -1159,7 +1216,7 @@ class vmJsApi{
 				$jsVars .= "closeImage = '".$closeimage."' ; \n";
 				//This is necessary though and should not be removed without rethinking the whole construction
 
-				$jsVars .= "usefancy = false";
+				$jsVars .= "usefancy = false;";
 				vmJsApi::js( 'facebox' );
 				vmJsApi::css( 'facebox' );
 			}

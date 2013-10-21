@@ -36,7 +36,7 @@ defined('_JEXEC') or die('Restricted access');
 
 $document = JFactory::getDocument();
 $document->addScriptDeclaration($js);
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start', 'COM_VIRTUEMART_SHOPPERGROUP_NAME');
 ?>
 

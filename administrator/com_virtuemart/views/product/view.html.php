@@ -155,7 +155,11 @@ class VirtuemartViewProduct extends VmView {
 
 				/* Load product types lists */
 				$customsList = $field_model->getCustomsList();
-				$customlist = JHTML::_('select.genericlist', $customsList,'customlist');
+				$attribs='style= "width: 300px;"';
+				$customlist = JHTML::_('select.genericlist', $customsList,'customlist', $attribs);
+
+
+
 				$this->assignRef('customsList', $customlist);
 
 				$ChildCustomRelation = $field_model->getProductChildCustomRelation();

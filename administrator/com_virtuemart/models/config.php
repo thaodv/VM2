@@ -107,7 +107,7 @@ class VirtueMartModelConfig extends JModel {
 
 		$dir = JPATH_ROOT.DS.'libraries'.DS.'tcpdf'.DS.'fonts';
 		$specfiles = glob($dir.DS."*_specs.xml");
-		$result = '';
+		$result = array();
 		foreach ($specfiles as $file) {
 			$fontxml = @simpleXML_load_file($file);
 			if ($fontxml) {
@@ -337,11 +337,28 @@ class VirtueMartModelConfig extends JModel {
 
 		$safePath = trim($config->get('forSale_path'));
 		if(!empty($safePath)){
+			if(DS!='/' and strpos($safePath,'/')!==false){
+				$safePath=str_replace('/',DS,$safePath);
+				vmdebug('$safePath',$safePath);
+			}
 			$length = strlen($safePath);
 			if(strrpos($safePath,DS)!=($length-1)){
 				$safePath = $safePath.DS;
-				$config->set('forSale_path',$safePath);
 				vmInfo('Corrected safe path added missing '.DS);
+			}
+			$config->set('forSale_path',$safePath);
+		} else {
+			$safePath = JPATH_ROOT.DS.'administrator'.DS.'components'.DS.'com_virtuemart'.DS.'vmfiles';
+			$exists = JFolder::exists($safePath);
+			if(!$exists){
+				$created = JFolder::create($safePath);
+				$safePath = $safePath.DS;
+				if($created){
+
+					vmInfo('COM_VIRTUEMART_SAFE_PATH_DEFAULT_CREATED',$safePath);
+				} else {
+					VmWarn('COM_VIRTUEMART_WARN_SAFE_PATH_NO_INVOICE',JText::_('COM_VIRTUEMART_ADMIN_CFG_MEDIA_FORSALE_PATH'));
+				}
 			}
 		}
 
@@ -360,7 +377,6 @@ class VirtueMartModelConfig extends JModel {
 				}
 			}
 		}
-
 
 		$confData['config'] = $config->toString();
 		// 		vmdebug('config to store',$confData);

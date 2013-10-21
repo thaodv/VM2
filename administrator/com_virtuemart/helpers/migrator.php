@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @version $Id: migrator.php 7071 2013-07-12 19:33:22Z Milbo $
+ * @version $Id: migrator.php 7167 2013-09-03 11:40:04Z Milbo $
  * @package VirtueMart
  * @subpackage classes
  * @copyright Copyright (C) 2004-2007 soeren, 2009-2011 VirtueMart Team. All rights reserved.
@@ -52,8 +52,7 @@ class Migrator extends VmModel{
 		if(!empty($jrmemory_limit)){
 			@ini_set( 'memory_limit', $jrmemory_limit.'M' );
 		} else {
-			$memory_limit = (int) substr(ini_get('memory_limit'),0,-1);
-			if($memory_limit<128)  @ini_set( 'memory_limit', '128M' );
+			VmConfig::ensureMemoryLimit(128);
 		}
 
 		$this->maxMemoryLimit = $this->return_bytes(ini_get('memory_limit')) - (14 * 1024 * 1024)  ;		//Lets use 11MB for joomla

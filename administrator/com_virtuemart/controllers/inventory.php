@@ -41,9 +41,7 @@ class VirtuemartControllerInventory extends VmController {
 	 */
 	function __construct() {
 		parent::__construct();
-
 	}
-
 
 }
 // pure php no closing tag

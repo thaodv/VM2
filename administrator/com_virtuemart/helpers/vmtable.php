@@ -799,7 +799,8 @@ class VmTable extends JTable {
 
 				foreach ($this->_translatableFields as $name) {
 					if (isset($data->$name)) {
-						$langData[$name] = $data->$name;
+						//We directly store language stuff "escaped"
+						$langData[$name] = htmlentities($data->$name, ENT_QUOTES, "UTF-8");
 					} else {
 					//	$langData[$name] = '';
 					}
@@ -822,7 +823,8 @@ class VmTable extends JTable {
 			} else {
 				foreach ($this->_translatableFields as $name) {
 					if (isset($data[$name])) {
-						$langData[$name] = $data[$name];
+						//$langData[$name] = $data[$name];
+						$langData[$name] = htmlentities($data[$name], ENT_QUOTES, "UTF-8");
 					} else {
 					//	$langData[$name] = '';
 					}
@@ -1443,18 +1445,18 @@ class VmTable extends JTable {
 
 	}
 
-	function checkAndDelete($table, $where = 0) {
+	function checkAndDelete($table, $whereField = 0, $andWhere = '') {
 
 		$ok = 1;
 		$k = $this->_tbl_key;
 
-		if ($where !== 0) {
-			$whereKey = $where;
+		if ($whereField !== 0) {
+			$whereKey = $whereField;
 		} else {
 			$whereKey = $this->_pkey;
 		}
 
-		$query = 'SELECT `' . $this->_tbl_key . '` FROM `' . $table . '` WHERE ' . $whereKey . ' = "' . $this->$k . '"';
+		$query = 'SELECT `' . $this->_tbl_key . '` FROM `' . $table . '` WHERE `' . $whereKey . '` = "' . $this->$k . '" '.$andWhere;
 		$this->_db->setQuery($query);
 		// 		vmdebug('checkAndDelete',$query);
 		$list = $this->_db->loadResultArray();

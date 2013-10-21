@@ -247,12 +247,12 @@ if (!defined('_VM_SCRIPT_INCLUDED')) {
    				)
  			);
 
-			$this->alterTable('#__virtuemart_order_items',
+			/*$this->alterTable('#__virtuemart_order_items',
 				array(
 					'product_discountedPriceWithoutTax' => '',
 				),
 				'DROP'
-			);
+			);*/
 
 			$this->deleteReCreatePrimaryKey('#__virtuemart_userinfos','virtuemart_userinfo_id');
 

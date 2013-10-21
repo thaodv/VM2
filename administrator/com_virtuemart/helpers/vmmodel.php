@@ -121,8 +121,6 @@ class VmModel extends JModel {
 		if(is_array($id) && count($id)!==0) $id = $id[0];
 		if($this->_id!=$id){
 			$this->_id = (int)$id;
-			//			$idName = $this->_idName;
-			//			$this->$idName = $this->_id;
 			$this->_data = null;
 		}
 		return $this->_id;
@@ -728,7 +726,7 @@ class VmPagination extends JPagination {
 				$limits[] = JHTML::_('select.option', JRoute::_( $link.'&limit='.$this->limit,false),$this->limit);
 				ksort($limits);
 			}
-			$selected= JRoute::_( $link.'&limit='. $selected) ;
+			$selected= JRoute::_( $link.'&limit='. $selected,false) ;
 			$js = 'onchange="window.top.location.href=this.options[this.selectedIndex].value"';
 
 			$html = JHTML::_('select.genericlist',  $limits, '', 'class="inputbox" size="1" '.$js , 'value', 'text', $selected);

@@ -18,7 +18,7 @@
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 /* Load some variables */
 $search_date = JRequest::getVar('search_date', null); // Changed search by date

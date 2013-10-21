@@ -20,7 +20,7 @@
 defined('_JEXEC') or die('Restricted access');
 
 vmJsApi::JvalideForm();
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_USERFIELD_DETAILS');
 // vmdebug ('$this->userField',$this->userField);
 ?>

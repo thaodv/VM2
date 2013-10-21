@@ -18,7 +18,7 @@
 
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 ?>
 <form action="index.php" method="post" name="adminForm" id="adminForm">
 	<div id="header">
@@ -26,7 +26,7 @@ AdminUIHelper::startAdminArea();
 		<table>
 		  <tr>
 			 <td align="left">
-				<?php echo $this->displayDefaultViewSearch('filter_product') ?>
+				<?php echo $this->displayDefaultViewSearch('COM_VIRTUEMART_NAME','filter_product') ?>
 				<?php echo $this->lists['stockfilter'] ?>
 			 </td>
 		  </tr>
@@ -55,7 +55,7 @@ AdminUIHelper::startAdminArea();
 	if (count($this->inventorylist) > 0) {
 		$i = 0;
 		$k = 0;
-		$keyword = JRequest::getWord('keyword');
+		$keyword = vmRequest::uword ('keyword', "", ' ,-,+,.,_,#,/');
 		foreach ($this->inventorylist as $key => $product) {
 			$checked = JHTML::_('grid.id', $i , $product->virtuemart_product_id);
 			$published = JHTML::_('grid.published', $product, $i );

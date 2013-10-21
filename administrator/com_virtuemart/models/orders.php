@@ -199,7 +199,7 @@ class VirtueMartModelOrders extends VmModel {
 		// Get the order items
 $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
     order_item_sku, i.virtuemart_product_id, product_item_price,
-    product_final_price, product_basePriceWithTax, product_priceM, product_discountedPriceWithoutTax, product_priceWithoutTax, product_subtotal_with_tax, product_subtotal_discount, product_tax, product_attribute, order_status,
+    product_final_price, product_basePriceWithTax, product_discountedPriceWithoutTax, product_priceWithoutTax, product_subtotal_with_tax, product_subtotal_discount, product_tax, product_attribute, order_status, p.product_available_date, p.product_availability,
     intnotes, virtuemart_category_id
    FROM (#__virtuemart_order_items i
    LEFT JOIN #__virtuemart_products p
@@ -1632,7 +1632,7 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 			    $this->removeOrderLineItem($item_id);
 			}
 			// rename invoice number by adding the date, and update the invoice table
-			 $this->renameInvoice($id);
+			 $this->renameInvoice($id );
 
 
 			if (!$table->delete((int)$id)) {
@@ -1861,13 +1861,13 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 		return $_orderID;
 	}
 
-	/** Rename Invoice Number (when it is deleted, or modified
+	/** Rename Invoice  (when an order is deleted)
 	 *
 	 * @author Valérie Isaksen
 	 * @param $order_id Id of the order
 	 * @return boolean true if deleted successful, false if there was a problem
 	 */
-	function renameInvoice($order_id) {
+	function renameInvoice($order_id ) {
 		$db = JFactory::getDBO();
 
 		$q = 'SELECT * FROM `#__virtuemart_invoices` WHERE `virtuemart_order_id`= "'.$order_id.'" ';
@@ -1884,16 +1884,19 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 		$invoice_name_src = $path.DS.$invoice_prefix.$data['invoice_number'].'.pdf';
 
 		if(!file_exists($invoice_name_src)){
-			vmError ('Invoice '.$invoice_name_src.' does not exist' );
+			// may be it was already deleted when changing order items
+			$data['invoice_number'] = "";
+		} else {
+			$date = date("Ymd");
+			$data['invoice_number'] = $data['invoice_number'].'_'.$date;
+			$invoice_name_dst = $path.DS.$data['invoice_number'].'.pdf';
+
+			if(!class_exists('JFile')) require(JPATH_VM_LIBRARIES.DS.'joomla'.DS.'filesystem'.DS.'file.php');
+			if (!JFile::move($invoice_name_src, $invoice_name_dst)) {
+				vmError ('Could not rename Invoice '.$invoice_name_src.'to '. $invoice_name_dst );
+			}
 		}
-		$date = date("Ymd");
-		$data['invoice_number'] = $data['invoice_number'].'_'.$date;
-		$invoice_name_dst = $path.$data['invoice_number'].'.pdf';
-		if(!class_exists('JFile')) require(JPATH_VM_LIBRARIES.DS.'joomla'.DS.'filesystem'.DS.'file.php');
-		if (!JFile::move($invoice_name_src, $invoice_name_dst)) {
-			vmError ('Could not rename Invoice '.$invoice_name_src.'to '. $invoice_name_dst );
-		}
-		// update the invoice table
+
 		$table = $this->getTable('invoices');
 		$table->bindChecknStore($data);
 
@@ -1901,6 +1904,40 @@ $q = 'SELECT virtuemart_order_item_id, product_quantity, order_item_name,
 
 
 	}
+	/** Delete Invoice when an item is updated
+	 *
+	 * @author Valérie Isaksen
+	 * @param $order_id Id of the order
+	 * @return boolean true if deleted successful, false if there was a problem
+	 */
+	function deleteInvoice($order_id ) {
+		$db = JFactory::getDBO();
+
+		$q = 'SELECT * FROM `#__virtuemart_invoices` WHERE `virtuemart_order_id`= "'.$order_id.'" ';
+
+		$db->setQuery($q);
+		$data = $db->loadAssoc();
+		if(!$data or   empty($data['invoice_number']) ){
+			return true;
+		}
+
+		// rename invoice pdf file
+		$invoice_prefix='vminvoice_';
+		$path = shopFunctions::getInvoicePath(VmConfig::get('forSale_path',0));
+		$invoice_name_src = $path.DS.$invoice_prefix.$data['invoice_number'].'.pdf';
+
+		if(!file_exists($invoice_name_src)){
+			// was already deleted by a previoous change
+			return;
+		}
+
+		if(!class_exists('JFile')) require(JPATH_VM_LIBRARIES.DS.'joomla'.DS.'filesystem'.DS.'file.php');
+		if (!JFile::delete($invoice_name_src )) {
+			vmError ('Could not delete Invoice '.$invoice_name_src  );
+		}
+
+	}
+
 }
 
 // No closing tag

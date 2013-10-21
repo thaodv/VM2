@@ -18,7 +18,7 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 vmJsApi::JvalideForm();
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 ?>
 <form name="adminForm" id="adminForm" method="post" action="">
     <fieldset>

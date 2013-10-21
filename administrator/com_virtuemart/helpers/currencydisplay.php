@@ -305,7 +305,8 @@ class CurrencyDisplay {
 	/*	if($this->_vendorCurrency_numeric===756){ // and $this->_numeric_code!==$this->_vendorCurrency_numeric){
 			$price = round((float)$price * 2,1) * 0.5 * (float)$quantity;
 		} else {*/
-			$price = round((float)$price,$nb) * (float)$quantity;
+			$price = (float)$price * (float)$quantity;
+			$price = round($price,$nb);
 		//}
 		$price = $this->convertCurrencyTo($currencyId,$price,$inToShopCurrency);
 
@@ -422,13 +423,15 @@ class CurrencyDisplay {
 			vmdebug('convertCurrencyTo OBJECT '.$exchangeRate);
 		}
 		else {
-			//				$this->_db = JFactory::getDBO();
-			$q = 'SELECT `currency_exchange_rate` FROM `#__virtuemart_currencies` WHERE `virtuemart_currency_id` ="'.(int)$currency.'" ';
-			$this->_db->setQuery($q);
-			$exch = (float)$this->_db->loadResult();
-			// 				vmdebug('begin convertCurrencyTo '.$exch);
-			if(!empty($exch)){
-				$exchangeRate = $exch;
+			static $currency_exchange_rate = array();
+			if(!isset($currency_exchange_rate[$currency])){
+				$q = 'SELECT `currency_exchange_rate` FROM `#__virtuemart_currencies` WHERE `virtuemart_currency_id` ="'.(int)$currency.'" ';
+				$this->_db->setQuery($q);
+				$currency_exchange_rate[$currency] = (float)$this->_db->loadResult();
+			}
+
+			if(!empty($currency_exchange_rate[$currency])){
+				$exchangeRate = $currency_exchange_rate[$currency];
 			} else {
 				$exchangeRate = 0;
 			}
@@ -470,14 +473,9 @@ class CurrencyDisplay {
 	function ensureUsingCurrencyCode($curr){
 
 		if(is_numeric($curr) and $curr!=0){
-			$this->_db = JFactory::getDBO();
-			$q = 'SELECT `currency_code_3` FROM `#__virtuemart_currencies` WHERE `virtuemart_currency_id`="'.(int)$curr.'"';
-			$this->_db->setQuery($q);
-			$currInt = $this->_db->loadResult();
-			if(empty($currInt)){
-				JError::raiseWarning(E_WARNING,'Attention, could not find currency code in the table for id = '.$curr);
-			}
-			return $currInt;
+			if (!class_exists('ShopFunctions'))
+				require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'shopfunctions.php');
+			return ShopFunctions::getCurrencyByID($curr,'currency_code_3');
 		}
 		return $curr;
 	}
@@ -490,16 +488,10 @@ class CurrencyDisplay {
 	 * @author Kohl Patrick
 	 */
 	function getCurrencyIdByField($value=0,$fieldName ='currency_code_3'){
-
 		if(is_string($value) ){
-			$this->_db = JFactory::getDBO();
-			$q = 'SELECT `virtuemart_currency_id` FROM `#__virtuemart_currencies` WHERE `'.$fieldName.'`="'.$value.'"';
-			$this->_db->setQuery($q);
-			$currency_id = $this->_db->loadResult();
-			if(empty($currency_id)){
-				JError::raiseWarning(E_WARNING,'Attention, couldnt find currency_id in the table for '.$fieldName.' = '.$value);
-			}
-			return $currency_id;
+			if (!class_exists('ShopFunctions'))
+				require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'shopfunctions.php');
+			return ShopFunctions::getCurrencyIDByName($value,$fieldName);			
 		}
 		return $value;
 	}

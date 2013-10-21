@@ -45,8 +45,7 @@ class GenericTableUpdater extends JModel{
 
 		$this->maxScriptTime = ini_get('max_execution_time')*0.90-1;	//Lets use 10% of the execution time as reserve to store the progress
 
-		$memory_limit = ini_get('memory_limit');
-		if($memory_limit<128)  @ini_set( 'memory_limit', '128M' );
+		VmConfig::ensureMemoryLimit(128);
 
 		$this->maxMemoryLimit = $this->return_bytes(ini_get('memory_limit')) * 0.85;
 
@@ -159,8 +158,11 @@ class GenericTableUpdater extends JModel{
 				}
 			} else {
 				$fields['vendor_terms_of_service'] = 'text '.$linedefaulttext;
+				$key = array_search('vendor_terms_of_service', $translatableFields);
+				unset($translatableFields[$key]);
 
-				$key = array_search('vendor_store_desc', $translatableFields);
+				$fields['vendor_legal_info'] = 'text '.$linedefaulttext;
+				$key = array_search('vendor_legal_info', $translatableFields);
 				unset($translatableFields[$key]);
 			}
 

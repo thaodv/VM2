@@ -19,7 +19,7 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 //if($virtuemart_vendor_id==1 || $perm->check( 'admin' )){
 
 ?>

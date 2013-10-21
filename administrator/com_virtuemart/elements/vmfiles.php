@@ -68,7 +68,8 @@ class JElementVMFiles extends JElement {
 				$options[] = JHTML::_ ('select.option', $file, $file);
 			}
 		}
-		$class = 'multiple="true" size="5" data-placeholder="'.JText::_('COM_VIRTUEMART_DRDOWN_SELECT_SOME_OPTIONS').'"';
+		$class = ($node->attributes('class') ? 'class="' . $node->attributes('class') . '"' : '');
+		$class .= ' multiple="true" size="5" data-placeholder="'.JText::_('COM_VIRTUEMART_DRDOWN_SELECT_SOME_OPTIONS').'"';
 		return JHTML::_ ('select.genericlist', $options, '' . $control_name . '[' . $name . '][]', $class, 'value', 'text', $value, $control_name . $name);
 	}
 

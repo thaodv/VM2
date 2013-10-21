@@ -2,7 +2,8 @@
 /**
  * abstract controller class containing get,store,delete,publish and pagination
  *
- *
+ ** @version $Id: vmview.php 7230 2013-09-21 09:00:32Z alatak $
+
  * This class provides the functions for the calculations
  *
  * @package	VirtueMart
@@ -37,8 +38,8 @@ class VmView extends JView{
 	var $lists = array();
 
 	protected $canDo;
-	function __construct() {
-		parent::__construct();
+	function __construct($config = array()) {
+		parent::__construct($config);
 		// What Access Permissions does this user have? What can (s)he do?
 		$this->canDo = self::getActions();
 	}
@@ -187,7 +188,7 @@ class VmView extends JView{
 		if (JRequest::getCmd('tmpl') =='component' ) {
 			if (!class_exists('JToolBarHelper')) require(JPATH_ADMINISTRATOR.DS.'includes'.DS.'toolbar.php');
 		} else {
-	// 		JRequest::setVar('hidemainmenu', true);
+			// 		JRequest::setVar('hidemainmenu', true);
 			JToolBarHelper::divider();
 			if ($this->canDo->get('core.admin') || $this->canDo->get('vm.'.$view.'.edit')) {
 				JToolBarHelper::save();
@@ -244,6 +245,12 @@ class VmView extends JView{
 		$selectedLangue = $params->get('site', 'en-GB');
 
 		$lang = strtolower(strtr($selectedLangue,'-','_'));
+		// Get all the published languages defined in Language manager > Content
+		$allLanguages	= JLanguageHelper::getLanguages();
+		foreach ($allLanguages as $jlang) {
+			$languagesByCode[$jlang->lang_code]=$jlang;
+		}
+
 		// only add if ID and view not null
 		if ($editView and $id and (count(vmconfig::get('active_languages'))>1) ) {
 
@@ -251,15 +258,33 @@ class VmView extends JView{
 			//$params = JComponentHelper::getParams('com_languages');
 			jimport('joomla.language.helper');
 			$lang = JRequest::getVar('vmlang', $lang);
+			// list of languages installed in #__extensions (may be more than the ones in the Language manager > Content if the user did not added them)
 			$languages = JLanguageHelper::createLanguageList($selectedLangue, constant('JPATH_SITE'), true);
 			$activeVmLangs = (vmconfig::get('active_languages') );
-
+			$flagCss="";
 			foreach ($languages as $k => &$joomlaLang) {
-				if (!in_array($joomlaLang['value'], $activeVmLangs) )  unset($languages[$k] );
+				if (!in_array($joomlaLang['value'], $activeVmLangs) ) {
+					unset($languages[$k] );
+				} else {
+					$key=$joomlaLang['value'];
+					$img=$languagesByCode[$joomlaLang['value']]->image;
+					$image_flag="../media/mod_languages/images/".$img.".gif";
+					if (!file_exists ($image_flag)) {
+						vmerror(JText::sprintf('COM_VIRTUEMART_MISSING_FLAG', $image_flag,$joomlaLang['text'] ) );
+					}
+					$flagCss .="td.flag-".$key.",.flag-".$key."{background: url( ".$image_flag.") no-repeat 0 0; padding-left:20px !important;}\n";
+				}
 			}
+			JFactory::getDocument()->addStyleDeclaration($flagCss);
+
 			$langList = JHTML::_('select.genericlist',  $languages, 'vmlang', 'class="inputbox"', 'value', 'text', $selectedLangue , 'vmlang');
 			$this->assignRef('langList',$langList);
 			$this->assignRef('lang',$lang);
+
+			if ($editView =='product') {
+				$productModel = VmModel::getModel('product');
+				$childproducts = $productModel->getProductChilds($id) ? $productModel->getProductChilds($id) : '';
+			}
 
 			$token = JUtility::getToken();
 			$j = '
@@ -267,7 +292,7 @@ class VmView extends JView{
 				var oldflag = "";
 				$("select#vmlang").chosen().change(function() {
 					langCode = $(this).find("option:selected").val();
-					flagClass = "flag-"+langCode.substr(3,5).toLowerCase() ;
+					flagClass = "flag-"+langCode;
 					$.getJSON( "index.php?option=com_virtuemart&view=translate&task=paste&format=json&lg="+langCode+"&id='.$id.'&editView='.$editView.'&'.$token.'=1" ,
 						function(data) {
 							var items = [];
@@ -280,8 +305,29 @@ class VmView extends JView{
 									if (cible.parent().addClass(flagClass).children().hasClass("mce_editable") && data.structure !== "empty" ) tinyMCE.execInstanceCommand(key,"mceSetContent",false,val);
 									else if (data.structure !== "empty") cible.val(val);
 									});
-								oldflag = flagClass ;
-							} else alert(data.msg);
+
+							} else alert(data.msg);';
+
+			if($editView =='product' && !empty($childproducts)) {
+				foreach($childproducts as $child) {
+					$j .= '
+									$.getJSON( "index.php?option=com_virtuemart&view=translate&task=paste&format=json&lg="+langCode+"&id='.$child->virtuemart_product_id.'&editView='.$editView.'&'.$token.'=1" ,
+										function(data) {
+											cible = jQuery("#child'. $child->virtuemart_product_id .'product_name");
+											cible.parent().removeClass(oldflag)
+											cible.parent().addClass(flagClass);
+											cible.val(data.fields["product_name"]);
+											jQuery("#child'. $child->virtuemart_product_id .'slug").val(data.fields["slug"]);
+
+											oldflag = flagClass ;
+										}
+									)
+								';
+				}
+			}
+			else $j .= 'oldflag = flagClass ;';
+
+			$j .= '
 						}
 					)
 				});
@@ -293,13 +339,15 @@ class VmView extends JView{
 			$jlang = JFactory::getLanguage();
 			$langs = $jlang->getKnownLanguages();
 			$defautName = $langs[$selectedLangue]['name'];
-			$flagImg =JURI::root( true ).'/administrator/components/com_virtuemart/assets/images/flag/'.substr($lang,0,2).'.png';
-			$langList = '<input name ="vmlang" type="hidden" value="'.$selectedLangue.'" ><img style="vertical-align: middle;" alt="'.$defautName.'" src="'.$flagImg.'"> <b> '.$defautName.'</b>';
+			$flagImg= JHtml::_('image', 'mod_languages/'. $languagesByCode[$selectedLangue]->image.'.gif',  $languagesByCode[$selectedLangue]->title_native, array('title'=> $languagesByCode[$selectedLangue]->title_native), true);
+			$langList = '<input name ="vmlang" type="hidden" value="'.$selectedLangue.'" >'.$flagImg.' <b> '.$defautName.'</b>';
 			$this->assignRef('langList',$langList);
 			$this->assignRef('lang',$lang);
 		}
 
 	}
+
+
 
 
 	function SetViewTitle($name ='', $msg ='') {
@@ -343,7 +391,7 @@ class VmView extends JView{
 		'. JHTML::_( 'form.token' );
 	}
 
-	static function getToolbar() {
+	static function getToolbar($vmView) {
 
 		// add required stylesheets from admin template
 		$document    = JFactory::getDocument();
@@ -363,7 +411,7 @@ class VmView extends JView{
 		jimport('joomla.html.toolbar');
 		JToolBarHelper::divider();
 		$view = JRequest::getCmd('view', JRequest::getCmd('controller','virtuemart'));
-		if ($this->canDo->get('core.admin') || $this->canDo->get('vm.'.$view.'.edit')) {
+		if ($vmView->canDo->get('core.admin') || $vmView->canDo->get('vm.'.$view.'.edit')) {
 			JToolBarHelper::save();
 			JToolBarHelper::apply();
 		}

@@ -398,8 +398,8 @@ class ShopFunctions {
 	static public function renderTemplateList ($defaultText = 0, $defaultOption = TRUE) {
 
 		if (empty($defaultText)) {
-					$defaultText = JText::_ ('COM_VIRTUEMART_TEMPLATE_DEFAULT');
-				}
+			$defaultText = JText::_ ('COM_VIRTUEMART_TEMPLATE_DEFAULT');
+		}
 
 		$defaulttemplate = array();
 		if ($defaultOption) {
@@ -414,21 +414,21 @@ class ShopFunctions {
 						require (JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_templates' . DS . 'helpers' . DS . 'template.php');
 					}
 			$jtemplates = TemplatesHelper::parseXMLTemplateFiles (JPATH_SITE . DS . 'templates');
+			foreach ($jtemplates as $key => $template) {
+				$template->value = $template->name;
+			}
 		} else {
-			require_once (JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_templates' . DS . 'helpers' . DS . 'templates.php');
-			require_once (JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_templates' . DS . 'models' . DS . 'templates.php');
-			$templatesModel = new TemplatesModelTemplates();
-			$jtemplates = $templatesModel->getItems ();
-		}
 
-		foreach ($jtemplates as $key => $template) {
-			$template->value = $template->name;
-			if (JVM_VERSION === 2) {
-				if ($template->client_id == '0') {
-					$template->directory = $template->element;
-				} else {
-					unset($jtemplates[$key]);
-				}
+			$q = 'SELECT * FROM `#__template_styles` WHERE `client_id`="0"';
+			$db = JFactory::getDbo();
+			$db->setQuery($q);
+
+			$jtemplates = $db->loadObjectList();
+
+			foreach ($jtemplates as $key => $template) {
+				$template->name = $template->title;
+				$template->value = $template->id;
+				$template->directory = $template->template;
 			}
 		}
 
@@ -764,8 +764,10 @@ class ShopFunctions {
 		if (empty(self::$categoryTree)) {
 // 			vmTime('Start with categoryListTree');
 			$cache = JFactory::getCache ('_virtuemart');
+			$cached = $cache->getCaching();
 			$cache->setCaching (1);
 			self::$categoryTree = $cache->call (array('ShopFunctions', 'categoryListTreeLoop'), $selectedCategories, $cid, $level, $disabledFields);
+			$cache->setCaching ($cached);
 			// self::$categoryTree = self::categoryListTreeLoop($selectedCategories, $cid, $level, $disabledFields);
 // 			vmTime('end loop categoryListTree '.self::$counter);
 		}
@@ -978,19 +980,23 @@ class ShopFunctions {
 		if (empty($id)) {
 			return '';
 		}
+		static $currencyNameById = array();
+		if(!isset($currencyNameById[$id][$fld])){
+			$id = (int)$id;
+			$db = JFactory::getDBO ();
 
-		$id = (int)$id;
-		$db = JFactory::getDBO ();
+			$q = 'SELECT ' . $db->getEscaped ($fld) . ' AS fld FROM `#__virtuemart_currencies` WHERE virtuemart_currency_id = ' . (int)$id;
+			$db->setQuery ($q);
+			$currencyNameById[$id][$fld] = $db->loadResult ();
+		}
 
-		$q = 'SELECT ' . $db->getEscaped ($fld) . ' AS fld FROM `#__virtuemart_currencies` WHERE virtuemart_currency_id = ' . (int)$id;
-		$db->setQuery ($q);
-		return $db->loadResult ();
+		return $currencyNameById[$id][$fld];
 	}
 
 	/**
 	 * Return the currencyID of a given Currency name
-	 *
-	 * @author Valerie Isaksen
+	 * This function becomes dangerous if there is a currency name with 3 letters
+	 * @author Valerie Isaksen, Max Milbers
 	 * @access public
 	 * @param string $name Currency name
 	 * @return int virtuemart_currency_id
@@ -1000,21 +1006,24 @@ class ShopFunctions {
 		if (empty($name)) {
 			return 0;
 		}
-		$db = JFactory::getDBO ();
-
-		if (strlen ($name) === 2) {
-			$fieldname = 'currency_code_2';
-		} else {
-			if (strlen ($name) === 3) {
-				$fieldname = 'currency_code_3';
+		static $currencyIdByName = array();
+		if(!isset($currencyIdByName[$name])){
+			$db = JFactory::getDBO ();
+			if (strlen ($name) === 2) {
+				$fieldname = 'currency_code_2';
 			} else {
-				$fieldname = 'currency_name';
+				if (strlen ($name) === 3) {
+					$fieldname = 'currency_code_3';
+				} else {
+					$fieldname = 'currency_name';
+				}
 			}
+			$q = 'SELECT `virtuemart_currency_id` FROM `#__virtuemart_currencies` WHERE `' . $fieldname . '` = "' . ($name) . '"';
+			$db->setQuery ($q);
+			$currencyIdByName[$name] = $db->loadResult ();
 		}
-		$q = 'SELECT `virtuemart_currency_id` FROM `#__virtuemart_currencies` WHERE `' . $fieldname . '` = "' . $db->getEscaped ($name) . '"';
-		$db->setQuery ($q);
-		$r = $db->loadResult ();
-		return $r;
+
+		return $currencyIdByName[$name];
 	}
 
 	/**

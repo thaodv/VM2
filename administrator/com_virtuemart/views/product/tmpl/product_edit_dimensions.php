@@ -22,27 +22,27 @@ defined('_JEXEC') or die('Restricted access');?>
    <tbody>
 
     <tr class="row1">
-		<th style="text-align:right;"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_LENGTH') ?>
+		<th><?php echo JText::_('COM_VIRTUEMART_PRODUCT_LENGTH') ?>
       </th>
       <td width="79%">
         <input type="text" class="inputbox"  name="product_length" value="<?php echo $this->product->product_length; ?>" size="15" maxlength="15" />   <?php echo " ".$this->lists['product_lwh_uom'];?>
       </td>
     </tr>
     <tr class="row0">
-		<th style="text-align:right;"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_WIDTH') ?></th>
+		<th><?php echo JText::_('COM_VIRTUEMART_PRODUCT_WIDTH') ?></th>
       <td>
         <input type="text" class="inputbox"  name="product_width" value="<?php echo $this->product->product_width; ?>" size="15" maxlength="15" />
       </td>
     </tr>
     <tr class="row1">
-		<th style="text-align:right;"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_HEIGHT') ?></th>
+		<th><?php echo JText::_('COM_VIRTUEMART_PRODUCT_HEIGHT') ?></th>
       <td>
         <input type="text" class="inputbox"  name="product_height" value="<?php echo $this->product->product_height; ?>" size="15" maxlength="15" />
       </td>
     </tr>
    
     <tr class="row0">
-		<th style="text-align:right;"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_WEIGHT') ?></th>
+		<th><?php echo JText::_('COM_VIRTUEMART_PRODUCT_WEIGHT') ?></th>
        <td>
         <input type="text" class="inputbox"  name="product_weight" size="15" maxlength="15" value="<?php echo $this->product->product_weight; ?>" />
         <?php echo " ".$this->lists['product_weight_uom'];?>
@@ -53,7 +53,7 @@ defined('_JEXEC') or die('Restricted access');?>
     <!-- Changed Packaging - Begin -->
    
     <tr class="row0">
-		<th style="text-align:right;">
+		<th>
         <span class="hasTip" title="<?php echo JText::sprintf('COM_VIRTUEMART_PRODUCT_PACKAGING_DESCRIPTION',JText::_('COM_VIRTUEMART_UNIT_NAME_L'),JText::_('COM_VIRTUEMART_PRODUCT_UNIT'),JText::_('COM_VIRTUEMART_UNIT_NAME_100ML')); ?>">
         <?php echo JText::_('COM_VIRTUEMART_PRODUCT_PACKAGING') ?>
          </span>
@@ -64,7 +64,7 @@ defined('_JEXEC') or die('Restricted access');?>
       </td>
     </tr>
     <tr class="row1">
-		<th style="text-align:right;">
+		<th>
                 <span class="hasTip" title="<?php echo JText::_('COM_VIRTUEMART_PRODUCT_BOX_DESCRIPTION'); ?>">
                 <?php echo JText::_('COM_VIRTUEMART_PRODUCT_BOX') ?>
                 </span></th>

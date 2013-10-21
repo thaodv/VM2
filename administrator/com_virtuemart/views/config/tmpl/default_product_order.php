@@ -13,7 +13,7 @@
  * to the GNU General Public License, and as distributed it includes or
  * is derivative of works licensed under the GNU General Public License or
  * other free or open source software licenses.
- * @version $Id: default_product_order.php 7004 2013-06-20 08:34:18Z alatak $
+ * @version $Id: default_product_order.php 7164 2013-09-03 08:09:09Z Milbo $
  */
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access'); ?>
@@ -30,11 +30,16 @@ defined('_JEXEC') or die('Restricted access'); ?>
 								</span>
 						</td>
 						<td>
-							<?php echo JHTML::_('Select.genericlist', $this->orderByFields->select, 'browse_orderby_field', 'size=1', 'value', 'text', VmConfig::get('browse_orderby_field', 'product_name'), 'product_name'); ?>
+							<?php echo JHTML::_('Select.genericlist', $this->orderByFields->select, 'browse_orderby_field', 'size=1', 'value', 'text', VmConfig::get('browse_orderby_field', 'product_name'), 'product_name');
+							$orderDirs[] = JHTML::_('select.option', 'ASC' , JText::_('Ascending')) ;
+							$orderDirs[] = JHTML::_('select.option', 'DESC' , JText::_('Descending')) ;
+
+							echo JHTML::_('select.genericlist', $orderDirs, 'prd_brws_orderby_dir', 'size=10', 'value', 'text', VmConfig::get('prd_brws_orderby_dir', 'ASC') ); ?>
 							<span class="hasTip" title="<?php echo JText::_('COM_VIRTUEMART_BROWSE_CAT_ORDERBY_DEFAULT_FIELD_LBL_TIP'); ?>">
 									<?php echo JText::_('COM_VIRTUEMART_BROWSE_CAT_ORDERBY_DEFAULT_FIELD_LBL'); ?>
 								</span>
-							<?php echo JHTML::_('Select.genericlist', $this->orderByFields->select, 'browse_cat_orderby_field', 'size=1', 'value', 'text', VmConfig::get('browse_cat_orderby_field', 'category_name'), 'category_name'); ?>
+							<?php echo JHTML::_('Select.genericlist', $this->orderByFields->select, 'browse_cat_orderby_field', 'size=1', 'value', 'text', VmConfig::get('browse_cat_orderby_field', 'category_name'), 'category_name');
+							echo JHTML::_('select.genericlist', $orderDirs, 'cat_brws_orderby_dir', 'size=10', 'value', 'text', VmConfig::get('cat_brws_orderby_dir', 'ASC') ); ?>
 						</td>
 					</tr>
 					<tr>

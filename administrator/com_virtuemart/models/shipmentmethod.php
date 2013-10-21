@@ -55,35 +55,35 @@ class VirtueMartModelShipmentmethod extends VmModel {
 	 */
 	function getShipment() {
 
-		if (empty($this->_data)) {
-			$this->_data = $this->getTable('shipmentmethods');
-			$this->_data->load((int)$this->_id);
+		if (empty($this->_data[$this->_id])) {
+			$this->_data[$this->_id] = $this->getTable('shipmentmethods');
+			$this->_data[$this->_id]->load((int)$this->_id);
 
-			if($this->_data->shipment_jplugin_id){
+			if($this->_data[$this->_id]->shipment_jplugin_id){
 				JPluginHelper::importPlugin('vmshipment');
 				$dispatcher = JDispatcher::getInstance();
-				$retValue = $dispatcher->trigger('plgVmDeclarePluginParamsShipment',array( $this->_data->shipment_element,$this->_data->shipment_jplugin_id,&$this->_data));
+				$retValue = $dispatcher->trigger('plgVmDeclarePluginParamsShipment',array($this->_data[$this->_id]->shipment_element,$this->_data[$this->_id]->shipment_jplugin_id,&$this->_data[$this->_id]));
 
 			}
 // 			vmdebug('$$this->_data getShipment',$this->_data);
 
-			if(empty($this->_data->virtuemart_vendor_id)){
+			if(empty($this->_data[$this->_id]->virtuemart_vendor_id)){
 				if(!class_exists('VirtueMartModelVendor')) require(JPATH_VM_ADMINISTRATOR.DS.'models'.DS.'vendor.php');
-				$this->_data->virtuemart_vendor_id = VirtueMartModelVendor::getLoggedVendor();;
+				$this->_data[$this->_id]->virtuemart_vendor_id = VirtueMartModelVendor::getLoggedVendor();;
 			}
  		//if(!empty($this->_id)){
 				/* Add the shipmentcarreir shoppergroups */
 				$q = 'SELECT `virtuemart_shoppergroup_id` FROM #__virtuemart_shipmentmethod_shoppergroups WHERE `virtuemart_shipmentmethod_id` = "'.$this->_id.'"';
 				$this->_db->setQuery($q);
-				$this->_data->virtuemart_shoppergroup_ids = $this->_db->loadResultArray();#
-				if(empty($this->_data->virtuemart_shoppergroup_ids)) $this->_data->virtuemart_shoppergroup_ids = 0;
+				$this->_data[$this->_id]->virtuemart_shoppergroup_ids = $this->_db->loadResultArray();#
+				if(empty($this->_data[$this->_id]->virtuemart_shoppergroup_ids)) $this->_data[$this->_id]->virtuemart_shoppergroup_ids = 0;
 
 
 		//}
 
 		}
 
-		return $this->_data;
+		return $this->_data[$this->_id];
 	}
 
 	/**

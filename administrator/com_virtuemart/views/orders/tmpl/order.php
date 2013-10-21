@@ -18,7 +18,7 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_ORDER_PRINT_PO_LBL');
 
 // Get the plugins
@@ -156,7 +156,6 @@ $document->addScriptDeclaration ( "
 						$userlink = JROUTE::_ ('index.php?option=com_virtuemart&view=user&task=edit&virtuemart_user_id[]=' . $this->orderbt->virtuemart_user_id);
 						echo JHTML::_ ('link', JRoute::_ ($userlink), $username, array('title' => JText::_ ('COM_VIRTUEMART_ORDER_EDIT_USER') . ' ' . $username));
 					} else {
-						vmdebug('my this',$this);
 						echo $this->orderbt->first_name.' '.$this->orderbt->last_name;
 					}
 					?>
@@ -413,15 +412,12 @@ $document->addScriptDeclaration ( "
 					<th class="title" width="50"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_BASEWITHTAX') ?></th>
 					<th class="title" width="50"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_GROSS') ?></th>
 					<th class="title" width="50"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_TAX') ?></th>
-					<th class="title" width="50"> <?php echo JText::_('Giá tự đặt') ?></th>
+					<th class="title" width="50"> <?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_DISCOUNT') ?></th>
 					<th class="title" width="5%"><?php echo JText::_('COM_VIRTUEMART_ORDER_PRINT_TOTAL') ?></th>
 				</tr>
 			</thead>
-		<?php foreach ($this->orderdetails['items'] as $item) { 
-		// print_r($item); die();
-		?>
+		<?php foreach ($this->orderdetails['items'] as $item) { ?>
 			<!-- Display the order item -->
-            
 			<tr valign="top" id="showItem_<?php echo $item->virtuemart_order_item_id; ?>" data-itemid="<?php echo $item->virtuemart_order_item_id; ?>">
 				<!--<td>
 					<?php $removeLineLink=JRoute::_('index.php?option=com_virtuemart&view=orders&orderId='.$this->orderbt->virtuemart_order_id.'&orderLineId='.$item->virtuemart_order_item_id.'&task=removeOrderItem'); ?>
@@ -492,7 +488,7 @@ $document->addScriptDeclaration ( "
 				</td>
 				<td align="right" style="padding-right: 5px;">
 					<?php echo $this->currency->priceDisplay($item->product_final_price); ?>
-					<input class='orderedit' type="hidden" size="8" name="item_id[<?php echo $item->virtuemart_order_item_id; ?>][product_final_price]" value="<?php echo $item->product_final_price = $item->product_priceM ; ?>"/>
+					<input class='orderedit' type="text" size="8" name="item_id[<?php echo $item->virtuemart_order_item_id; ?>][product_final_price]" value="<?php echo $item->product_final_price; ?>"/>
 				</td>
 				<td align="right" style="padding-right: 5px;">
 					<?php echo $this->currency->priceDisplay( $item->product_tax); ?>
@@ -502,8 +498,8 @@ $document->addScriptDeclaration ( "
 					</span>
 				</td>
 				<td align="right" style="padding-right: 5px;">
-					<?php echo $this->currency->priceDisplay( $item->product_priceM); ?>
-					<!-- <input class='orderedit' type="text" size="8" name="item_id[<?php echo $item->virtuemart_order_item_id; ?>][product_subtotal_discount]" value="<?php echo $item->product_subtotal_discount; ?>"/> -->
+					<?php echo $this->currency->priceDisplay( $item->product_subtotal_discount); ?>
+					<input class='orderedit' type="text" size="8" name="item_id[<?php echo $item->virtuemart_order_item_id; ?>][product_subtotal_discount]" value="<?php echo $item->product_subtotal_discount; ?>"/>
 				</td>
 				<td align="right" style="padding-right: 5px;">
 					<?php 
@@ -716,7 +712,7 @@ $document->addScriptDeclaration ( "
 						<input class='orderedit' type="checkbox" name="calculate_billTaxAmount" value="1" checked /> <label class='orderedit' for="calculate_billTaxAmount"><?php echo JText::_('COM_VIRTUEMART_ORDER_EDIT_CALCULATE'); ?></label>
 					</span>
 				</td>
-				<td align="right" style="padding-right: 5px;"><strong><?php echo $this->currency->priceDisplay($this->orderbt->order_billDiscountAmount); ?></strong>
+				<td align="right" style="padding-right: 5px;"><strong><?php echo $this->currency->priceDisplay($this->orderbt->order_billDiscountAmount); ?></strong></td>
 				<td align="right" style="padding-right: 5px;"><strong><?php echo $this->currency->priceDisplay($this->orderbt->order_total); ?></strong>
 				</td>
 			</tr>
@@ -755,7 +751,7 @@ $document->addScriptDeclaration ( "
 		JPluginHelper::importPlugin('vmpayment');
 		$_dispatcher = JDispatcher::getInstance();
 		$_returnValues = $_dispatcher->trigger('plgVmOnShowOrderBEPayment',array( $this->orderID,$this->orderbt->virtuemart_paymentmethod_id, $this->orderdetails));
-		//print_r($this->orderdetails['order_total']);
+
 		foreach ($_returnValues as $_returnValue) {
 			if ($_returnValue !== null) {
 				echo $_returnValue;

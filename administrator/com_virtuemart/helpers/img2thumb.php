@@ -57,8 +57,7 @@ class Img2Thumb	{
 	{
 
 		//Some big pictures need that
-		$memory_limit = (int) substr(ini_get('memory_limit'),0,-1);
-		if($memory_limit<128)  @ini_set( 'memory_limit', '128M' );
+		VmConfig::ensureMemoryLimit(128);
 
 		//	New modification - checks color int to be sure within range
 		if($thumbMaxSize)
@@ -315,7 +314,8 @@ class Img2Thumb	{
 			case "jpg":
 				if (strtolower(substr($fileout,strlen($fileout)-4,4))!=".jpg")
 					$fileout .= ".jpg";
-				return imagejpeg($new_img, $fileout, 100);
+				$quality = 89;
+				return imagejpeg($new_img, $fileout, $quality);
 				break;
 			case "png":
 				if (strtolower(substr($fileout,strlen($fileout)-4,4))!=".png")

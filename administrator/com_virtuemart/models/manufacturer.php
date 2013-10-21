@@ -101,7 +101,7 @@ class VirtueMartModelManufacturer extends VmModel {
 	function getManufacturerDropDown() {
 		$db = JFactory::getDBO();
 		$query = "SELECT `virtuemart_manufacturer_id` AS `value`, `mf_name` AS text, '' AS disable
-						FROM `#__virtuemart_manufacturers_".VMLANG."` ";
+						FROM `#__virtuemart_manufacturers_".VMLANG."` ORDER BY `mf_name` ASC";
 		$db->setQuery($query);
 		$options = $db->loadObjectList();
 		array_unshift($options, JHTML::_('select.option',  '0', '- '. JText::_('COM_VIRTUEMART_SELECT_MANUFACTURER') .' -' ));

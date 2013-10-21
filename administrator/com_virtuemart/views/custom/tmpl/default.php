@@ -16,7 +16,7 @@
 * @version $Id: default.php 2978 2011-04-06 14:21:19Z alatak $
 */
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 
 jimport('joomla.filesystem.file');
 

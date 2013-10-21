@@ -184,7 +184,7 @@ $rowColor = 0;
 			<br />
  <?php
 			// 							echo VmHtml::checkbox('override',$this->product->override);
-			$options = array(0 => JText::_ ('COM_VIRTUEMART_DISABLED'), 1 => JText::_ ('COM_VIRTUEMART_OVERWRITE_FINAL'), -1 => JText::_ ('COM_VIRTUEMART_OVERWRITE_PRICE_TAX'));
+			$options = array(0 => JText::_ ('COM_VIRTUEMART_OVERWRITE_OFF'), 1 => JText::_ ('COM_VIRTUEMART_OVERWRITE_FINAL'), -1 => JText::_ ('COM_VIRTUEMART_OVERWRITE_PRICE_TAX'));
 
 			echo VmHtml::radioList ('mprices[override][' . $this->priceCounter . ']', $this->tempProduct->override, $options,'',' ');
 			?>

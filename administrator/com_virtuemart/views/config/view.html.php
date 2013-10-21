@@ -105,8 +105,14 @@ class VirtuemartViewConfig extends VmView {
 		$this->assignRef('imagePath', $imagePath);
 
 		shopFunctions::checkSafePath();
-
 		$this -> checkVmUserVendor();
+
+		$cache = JFactory::getCache ('_virtuemart');
+		$cached = $cache->getCaching();
+		if($cached){
+			vmInfo('COM_VIRTUEMART_CFG_CACHE_ACTIVE');
+		}
+
 		parent::display($tpl);
 	}
 

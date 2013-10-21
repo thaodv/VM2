@@ -22,7 +22,7 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die('Restricted access');
 vmJsApi::cssSite();
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 AdminUIHelper::imitateTabs('start','COM_VIRTUEMART_REVIEW_DETAILS');
 ?>
 

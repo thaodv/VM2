@@ -620,6 +620,12 @@ class VirtueMartModelCustomfields extends VmModel {
 					break;
 				//'X'=>'COM_VIRTUEMART_CUSTOM_EDITOR',
 				case 'X':
+					// Not sure why this block is needed to get it to work when editing the customfield (the subsequent block works fine when creating it, ie. in JS)
+					$document=& JFactory::getDocument();
+					if (get_class($document) == 'JDocumentHTML') {
+						$editor =& JFactory::getEditor();
+						return $editor->display('field['.$row.'][custom_value]',$field->custom_value, '550', '400', '60', '20', false).'</td><td>';
+					}
 					return '<textarea class="mceInsertContentNew" name="field[' . $row . '][custom_value]" id="field-' . $row . '-custom_value">' . $field->custom_value . '</textarea>
 						<script type="text/javascript">// Creates a new editor instance
 							tinymce.execCommand("mceAddControl",true,"field-' . $row . '-custom_value")
@@ -765,7 +771,7 @@ class VirtueMartModelCustomfields extends VmModel {
 			FROM `#__virtuemart_customs` AS C
 			LEFT JOIN `#__virtuemart_product_customfields` AS field ON C.`virtuemart_custom_id` = field.`virtuemart_custom_id`
 			Where `virtuemart_product_id` =' . (int)$product->virtuemart_product_id . ' and `field_type` = "Z"';
-		$query .= ' and is_cart_attribute = 0 order by virtuemart_custom_id';
+		$query .= ' and is_cart_attribute = 0 order by ordering';
 		$this->_db->setQuery ($query);
 		if ($productCustoms = $this->_db->loadObjectList ()) {
 			$row = 0;
@@ -786,7 +792,7 @@ class VirtueMartModelCustomfields extends VmModel {
 			FROM `#__virtuemart_customs` AS C
 			LEFT JOIN `#__virtuemart_product_customfields` AS field ON C.`virtuemart_custom_id` = field.`virtuemart_custom_id`
 			Where `virtuemart_product_id` =' . (int)$product->virtuemart_product_id . ' and `field_type` = "R"';
-		$query .= ' and is_cart_attribute = 0 order by virtuemart_customfield_id';
+		$query .= ' and is_cart_attribute = 0 order by ordering';
 		$this->_db->setQuery ($query);
 		if ($productCustoms = $this->_db->loadObjectList ()) {
 			$row = 0;
@@ -875,7 +881,7 @@ class VirtueMartModelCustomfields extends VmModel {
 				$default = current ($group->options);
 				foreach ($group->options as $productCustom) {
 					$price = self::_getCustomPrice($productCustom->custom_price, $currency, $calculator);
-					$productCustom->text = $productCustom->custom_value . ' ' . $price;
+					$productCustom->text = JText::_($productCustom->custom_value) . ' ' . $price;
 				}
 				$group->display = VmHTML::select ('customPrice[' . $row . '][' . $group->virtuemart_custom_id . ']', $group->options, $default->custom_value, '', 'virtuemart_customfield_id', 'text', FALSE, false);
 			}
@@ -954,7 +960,7 @@ class VirtueMartModelCustomfields extends VmModel {
 						//MarkerVarMods
 									$group->display .= '<input id="' . $productCustom->virtuemart_custom_id .$row. '" ' . $checked . ' type="radio" value="' .
 										$productCustom->virtuemart_customfield_id . '" name="customPrice[' . $row . '][' . $productCustom->virtuemart_custom_id . ']" /><label
-										for="' . $productCustom->virtuemart_custom_id . '" class="other-customfield">' . $this->displayProductCustomfieldFE ($product, $productCustom, $row) . ' ' . $price . '</label>';
+										for="' . $productCustom->virtuemart_custom_id .$row. '" class="other-customfield">' . $this->displayProductCustomfieldFE ($product, $productCustom, $row) . ' ' . $price . '</label>';
 
 									$checked = '';
 								}
@@ -1036,6 +1042,10 @@ class VirtueMartModelCustomfields extends VmModel {
 					$virtuemart_category_id = $session->get ('vmlastvisitedcategoryid', 0, 'vm');
 
 					$productModel = VmModel::getModel ('product');
+					//Note by Jeremy Magne (Daycounts) 2013-08-31
+					//Previously the the product model is loaded but we need to ensure the correct product id is set because the getUncategorizedChildren does not get the product id as parameter.
+					//In case the product model was previously loaded, by a related product for example, this would generate wrong uncategorized children list
+					$productModel->setId($product->virtuemart_product_id);
 
 					//parseCustomParams
 					VirtueMartModelCustomfields::bindParameterableByFieldType($customfield);
@@ -1060,7 +1070,7 @@ class VirtueMartModelCustomfields extends VmModel {
 						break;
 					}
 
-					foreach ($uncatChildren as $k => $child) {
+					foreach ($uncatChildren as $child) {
 						$options[] = array('value' => JRoute::_ ('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id=' . $virtuemart_category_id . '&virtuemart_product_id=' . $child['virtuemart_product_id'],FALSE), 'text' => $child['product_name']);
 					}
 
@@ -1281,7 +1291,6 @@ class VirtueMartModelCustomfields extends VmModel {
 			$calculator = calculationHelper::getInstance ();
 		}
 
-		vmdebug('CustomsFieldCartDisplay ',$priceKey);
 		$variantmods = $calculator->parseModifier ($priceKey);
 
 		return self::customFieldDisplay ($product, $variantmods, '<div class="vm-customfield-cart">', 'plgVmOnViewCart');
@@ -1300,7 +1309,6 @@ class VirtueMartModelCustomfields extends VmModel {
 // 					$html = '<div class="vm-customfield-cart">';
 			if (!empty($item->param)) {
 				return self::customFieldDisplay ($item, $item->param, '<div class="vm-customfield-cart">', 'plgVmDisplayInOrder' . $view);
-
 			}
 			else {
 				vmdebug ('CustomsFieldOrderDisplay $item->param empty? ');

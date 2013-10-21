@@ -20,7 +20,7 @@
 defined('_JEXEC') or die('Restricted access');
 
 
-AdminUIHelper::startAdminArea (); 
+AdminUIHelper::startAdminArea ($this);
 
 JToolBarHelper::title(JText::_('COM_VIRTUEMART')." ".JText::_('COM_VIRTUEMART_CONTROL_PANEL'), 'head vm_store_48');
 

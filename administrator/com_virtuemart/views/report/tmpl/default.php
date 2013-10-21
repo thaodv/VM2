@@ -17,7 +17,7 @@ if( !defined( '_JEXEC' ) ) die( 'Direct Access to '.basename(__FILE__).' is not 
 * http://virtuemart.org
 */
 
-AdminUIHelper::startAdminArea();
+AdminUIHelper::startAdminArea($this);
 /* Load some variables */
 $rows = count( $this->report );
 $intervalTitle = JRequest::getVar('intervals','day');

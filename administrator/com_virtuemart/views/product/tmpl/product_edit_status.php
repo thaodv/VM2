@@ -22,7 +22,7 @@ defined('_JEXEC') or die('Restricted access'); ?>
 				<legend><?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRODUCT_STATUS_LBL'); ?></legend>
 <table class="adminform" width="100%">
 	<tr class="row0">
-		<th style="text-align:right;" width="25%">
+		<th width="25%">
 		<?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_IN_STOCK') ?>
 		</th>
 		<td width="20%">
@@ -49,7 +49,7 @@ defined('_JEXEC') or die('Restricted access'); ?>
 	</tr>
 	<tr class="row1">
 	<!-- low stock notification -->
-		<th style="text-align:right;">
+		<th>
 		<?php echo JText::_('COM_VIRTUEMART_LOW_STOCK_NOTIFICATION'); ?>
 			</th>
 		<td>
@@ -64,13 +64,13 @@ defined('_JEXEC') or die('Restricted access'); ?>
 	<!-- end low stock notification -->
 	</tr>
 	<tr class="row0">
-		<th style="text-align:right;">
+		<th >
 				<?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_MIN_ORDER') ?>
 </th>
 		<td>
 			<input type="text" class="inputbox"  name="min_order_level" value="<?php echo $this->product->min_order_level; ?>" size="10" />
 		</td>
-		<th style="text-align:right;">
+		<th >
 
 				<?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_MAX_ORDER') ?>
 		</th>
@@ -79,7 +79,7 @@ defined('_JEXEC') or die('Restricted access'); ?>
 		</td>
 	</tr>
 	<tr class="row1">
-		<th style="text-align:right;">
+		<th>
 
 				<?php echo JText::_('COM_VIRTUEMART_PRODUCT_FORM_AVAILABLE_DATE') ?>
 		</th>
@@ -90,7 +90,7 @@ defined('_JEXEC') or die('Restricted access'); ?>
 		</td>
 	</tr>
 	<tr class="row0">
-		<th style="text-align:right;">
+		<th valign="top">
 
 				<?php echo JText::_('COM_VIRTUEMART_AVAILABILITY') ?>
 		</th>

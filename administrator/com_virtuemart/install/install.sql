@@ -726,7 +726,7 @@ CREATE TABLE IF NOT EXISTS `#__virtuemart_products` (
   `product_availability` char(32),
   `product_special` tinyint(1),
   `product_sales` int(1) UNSIGNED NOT NULL DEFAULT '0',
-  `product_unit` char(4),
+  `product_unit` varchar(8),
   `product_packaging` decimal(8,4) UNSIGNED,
   `product_params` varchar(2000),
   `hits` int(11) unsigned,

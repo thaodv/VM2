@@ -46,7 +46,7 @@ class VirtueMartModelCategory extends VmModel {
 			$toCheck = 'category_name';
 		}
 		$this->_selectedOrdering = $toCheck;
-		$this->_selectedOrderingDir = 'ASC';
+		$this->_selectedOrderingDir = VmConfig::get('cat_brws_orderby_dir', 'ASC');;
 
 		$this->setToggleName('shared');
 
@@ -113,7 +113,7 @@ class VirtueMartModelCategory extends VmModel {
 	 * @param int $virtuemart_category_id Category id to check for child categories
 	 * @return object List of objects containing the child categories
 	 */
-	static public function getChildCategoryList($vendorId, $virtuemart_category_id) {
+	static public function getChildCategoryList($vendorId, $virtuemart_category_id,$selectedOrdering = 'category_name', $orderDir='ASC') {
 
 		$key = (int)$vendorId.'_'.(int)$virtuemart_category_id ;
 
@@ -127,7 +127,7 @@ class VirtueMartModelCategory extends VmModel {
 			//$query .= 'AND C.`virtuemart_category_id` = CC.`category_child_id` ';
 			$query .= 'AND C.`virtuemart_vendor_id` = ' . (int)$vendorId . ' ';
 			$query .= 'AND C.`published` = 1 ';
-			$query .= ' ORDER BY C.`ordering`, L.`category_name` ASC';
+			$query .= ' ORDER BY C.`ordering`, L.`'.$selectedOrdering.'` '.$orderDir;
 
 			$db = JFactory::getDBO();
 			$db->setQuery( $query);
@@ -572,6 +572,22 @@ class VirtueMartModelCategory extends VmModel {
 			    vmError($table->getError());
 			    return false;
 			}
+
+			$db = JFactory::getDbo();
+			$q = 'SELECT `virtuemart_customfield_id` FROM `#__virtuemart_product_customfields` as pc ';
+			$q .= 'LEFT JOIN `#__virtuemart_customs`as c using (`virtuemart_custom_id`) WHERE pc.`custom_value` = "' . $cid . '" AND `field_type`= "Z"';
+			$db->setQuery($q);
+			$list = $db->loadResultArray();
+
+			if ($list) {
+				$listInString = implode(',',$list);
+				//Delete media xref
+				$query = 'DELETE FROM `#__virtuemart_product_customfields` WHERE `virtuemart_customfield_id` IN ('. $listInString .') ';
+				$this->_db->setQuery($query);
+				if(!$this->_db->query()){
+					vmError( $this->_db->getErrorMsg() );
+				}
+			}
 		}
 
 		$cidInString = implode(',',$cids);
@@ -591,7 +607,7 @@ class VirtueMartModelCategory extends VmModel {
 			vmError( $this->_db->getErrorMsg() );
 		}
 
-		//deleting product relations
+		//deleting category relations
 		$query = 'DELETE FROM `#__virtuemart_category_categories` WHERE `category_child_id` IN ('. $cidInString .') ';
 		$this->_db->setQuery($query);
 

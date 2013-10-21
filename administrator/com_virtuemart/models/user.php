@@ -204,7 +204,7 @@ class VirtueMartModelUser extends VmModel {
 			$vendorModel = VmModel::getModel('vendor');
 			if(Vmconfig::get('multix','none')=='none'){
 				$this->_data->virtuemart_vendor_id = 1;
-				vmdebug('user model, single vendor',$this->_data->virtuemart_vendor_id);
+				//vmdebug('user model, single vendor',$this->_data->virtuemart_vendor_id);
 			}
 
 			$vendorModel->setId($this->_data->virtuemart_vendor_id);

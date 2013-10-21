@@ -40,10 +40,10 @@ class VirtueMartModelUserfields extends VmModel {
 	/** @var array type=>fieldname with formfields that are saved as parameters */
 	var $reqParam;
 	// stAn, this variable is a cached result of  getUserFields
-	// where array key is $cache_hash = md5($sec.serialize($_switches).serialize($_skip).$this->_selectedOrdering.$this->_selectedOrderingDir); 
-    static $_cache_ordered; 
+	// where array key is $cache_hash = md5($sec.serialize($_switches).serialize($_skip).$this->_selectedOrdering.$this->_selectedOrderingDir);
+    static $_cache_ordered;
 	// this variable is a cached result of named fields of last call of getUserFields where the key is $_sec of the function ('registration', 'account', 'shipping'.. etc...)
-	// example $_cached_named['registration']['email'] 
+	// example $_cached_named['registration']['email']
 	static $_cache_named;
 	// *** code for htmlpurifier ***
 	// var $htmlpurifier = '';
@@ -64,8 +64,8 @@ class VirtueMartModelUserfields extends VmModel {
 		// Instantiate the Helper class
 
 		$this->_params = new ParamHelper();
-		self::$_cache_ordered = null; 
-		self::$_cache_named = array();  
+		self::$_cache_ordered = null;
+		self::$_cache_named = array();
 		// Form fields that must be translated to parameters
 		$this->reqParam = array (
 			 'age_verification' => 'minimum_age'
@@ -206,13 +206,13 @@ class VirtueMartModelUserfields extends VmModel {
 	/**
 	 * Retrieve the value records for the current $id if available for the current type
 	 *
-	 * Updated by stAn to get userfieldvalues per specific id regardless on this->_id 
+	 * Updated by stAn to get userfieldvalues per specific id regardless on this->_id
 	 *
 	 * @return array List wil values, or an empty array if none exist
 	 */
 	function getUserfieldValues($id=null)
 	{
-	    if (empty($id)) $id = $this->_id; 
+	    if (empty($id)) $id = $this->_id;
 		$this->_data = $this->getTable('userfield_values');
 		if ($id > 0) {
 			$query = 'SELECT * FROM `#__virtuemart_userfield_values` WHERE `virtuemart_userfield_id` = ' . (int)$id
@@ -293,7 +293,7 @@ class VirtueMartModelUserfields extends VmModel {
 			vmError($field->getError());
 			return false;
 		}
-	
+
 		if (!$field->check(count($fieldValues))) {
 			// Perform data checks
 			//vmError($field->getError());
@@ -325,7 +325,7 @@ class VirtueMartModelUserfields extends VmModel {
 		}
 
 		$_id = $field->store();
-			
+
 		if ($_id === false) {
 			// Write data to the DB
 			vmError($field->getError());
@@ -360,17 +360,17 @@ class VirtueMartModelUserfields extends VmModel {
 	 */
 	private function storeFieldValues($_values, $_id)
 	{
-		// stAn - not true, because if previously we had more values, we have to delete them 
+		// stAn - not true, because if previously we had more values, we have to delete them
 		/*
 		if (count($_values) == 0) {
 			return true; //Nothing to do
 		}
 		*/
 		$fieldvalue = $this->getTable('userfield_values');
-	
+
 		// get original values
-		$originalvalues = $this->getUserfieldValues($_id); 
-		
+		$originalvalues = $this->getUserfieldValues($_id);
+
 		// for each orignal value search if it was deleted or modified
 		for ($i = 0; $i < count($originalvalues); $i++) {
 			if (isset($_values[$i]))
@@ -399,25 +399,25 @@ class VirtueMartModelUserfields extends VmModel {
 			}
 			else
 			{
-			
+
 			  // the field was deleted
 
 			  // stAn, next line doesn't work, because it tries to delete by the virtuemart_userfield_id instead of virtuemart_userfield_value_id
 			  // $msg = $fieldvalue->delete($originalvalues->virtuemart_userfield_value_id);
 			  $db = JFactory::getDBO();
-			  $q = 'DELETE from `#__virtuemart_userfield_values` WHERE `virtuemart_userfield_value_id` = ' . (int)$originalvalues[$i]->virtuemart_userfield_value_id.' and `virtuemart_userfield_id` = '.(int)$_id; 
-			  
+			  $q = 'DELETE from `#__virtuemart_userfield_values` WHERE `virtuemart_userfield_value_id` = ' . (int)$originalvalues[$i]->virtuemart_userfield_value_id.' and `virtuemart_userfield_id` = '.(int)$_id;
+
 			  $db->setQuery($q);
 		      if ($db->query() === false) {
 					vmError($db->getError());
 					return false;
 				}
-			
+
 			 }
 		}
 		// for each new value that was added
 		for ($i = count($originalvalues)-1; $i < count($_values) ; $i++) {
-		  
+
 		  // do a check here as we might not be using pure numeric arrays
 		  if (isset($_values[$i]))
 			{
@@ -443,7 +443,7 @@ class VirtueMartModelUserfields extends VmModel {
 				return false;
 			}
 			}
-		 
+
 		 }
 
 		return true;
@@ -482,6 +482,9 @@ class VirtueMartModelUserfields extends VmModel {
 			$skips[] = 'password2';
 			$skips[] = 'user_is_vendor';
 			$skips[] = 'agreed';
+			// MattLG: Added this line because it leaves the empty fieldset with just the label when editing the ST addresses
+			// A better solution might be to make this a setting rather than hard coding this whole block here
+			$skips[] = 'delimiter_userinfo';
 		}
 
 		//Here we get the fields
@@ -536,9 +539,9 @@ class VirtueMartModelUserfields extends VmModel {
 	public function getUserFields ($_sec = 'registration', $_switches=array(), $_skip = array('username', 'password', 'password2'))
 	{
 	    // stAn, we can't really create cache per sql as we want to create named array as well
-		$cache_hash = md5($_sec.serialize($_switches).serialize($_skip).$this->_selectedOrdering.$this->_selectedOrderingDir); 
-		if (isset(self::$_cache_ordered[$cache_hash])) return self::$_cache_ordered[$cache_hash]; 
-	
+		$cache_hash = md5($_sec.serialize($_switches).serialize($_skip).$this->_selectedOrdering.$this->_selectedOrderingDir);
+		if (isset(self::$_cache_ordered[$cache_hash])) return self::$_cache_ordered[$cache_hash];
+
 		$_q = 'SELECT * FROM `#__virtuemart_userfields` WHERE 1 = 1 ';
 
 		if( $_sec != 'bank' && $_sec != '') {
@@ -615,15 +618,15 @@ class VirtueMartModelUserfields extends VmModel {
 			$_address_type->params = '';
 			$_fields[] = $_address_type;
 		}
-		// stAn: slow to run the first time: 
+		// stAn: slow to run the first time:
 		self::$_cache_ordered[$cache_hash] = $_fields;
 		if (!isset(self::$_cache_named[$_sec]))
-		self::$_cache_named[$_sec] = array(); 
+		self::$_cache_named[$_sec] = array();
 		foreach ($_fields as &$f)
 		 {
-		    self::$_cache_named[$_sec][$f->name] = $f; 
+		    self::$_cache_named[$_sec][$f->name] = $f;
 		 }
-		 
+
 		return $_fields;
 	}
 
@@ -640,18 +643,18 @@ class VirtueMartModelUserfields extends VmModel {
 	 *
 	 * when used from shipment method, you can use
 	 * $userFieldsModel =VmModel::getModel('Userfields');
-	 * $type = (($cart->ST == 0) ? 'BT' : 'ST'); 
-	 * if ($userFieldsModel->fieldPublished('zip', $type)) .... 
+	 * $type = (($cart->ST == 0) ? 'BT' : 'ST');
+	 * if ($userFieldsModel->fieldPublished('zip', $type)) ....
 	*/
 	public function fieldPublished($_field_name, $_sec='account')
 	 {
-		if ($_sec == 'BT') $_sec = 'account'; 
+		if ($_sec == 'BT') $_sec = 'account';
 		else
-		if ($_sec == 'ST') $_sec = 'shipment'; 
-		if (isset(self::$_cache_named[$_sec])) return isset(self::$_cache_named[$_sec][$_field_name]); 
-		$this->getUserFields($_sec, array(), array()); 
-		if (isset(self::$_cache_named[$_sec])) return isset(self::$_cache_named[$_sec][$_field_name]); 
-		
+		if ($_sec == 'ST') $_sec = 'shipment';
+		if (isset(self::$_cache_named[$_sec])) return isset(self::$_cache_named[$_sec][$_field_name]);
+		$this->getUserFields($_sec, array(), array());
+		if (isset(self::$_cache_named[$_sec])) return isset(self::$_cache_named[$_sec][$_field_name]);
+
 		return false;
 	 }
 
@@ -1105,7 +1108,7 @@ class VirtueMartModelUserfields extends VmModel {
 				,'fieldtitle' => $titles[$i]
 				,'fieldvalue' => $values[$i]
 				,'ordering'   => $i
-				);			 
+				);
 			 }
 			 /*
 			for ($i=0; $i < count($titles) ;$i++) {

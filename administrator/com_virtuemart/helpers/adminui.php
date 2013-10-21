@@ -26,7 +26,7 @@ class AdminUIHelper {
      * in the left column and the content in the right column.  This function sets up the table and
      * displayes the admin menu in the left column.
      */
-   static function startAdminArea($selectText = 'COM_VIRTUEMART_DRDOWN_AVA2ALL') {
+   static function startAdminArea($vmView,$selectText = 'COM_VIRTUEMART_DRDOWN_AVA2ALL') {
 		if (JRequest::getWord ( 'format') =='pdf') return;
 		if (JRequest::getWord ( 'tmpl') =='component') self::$backEnd=false;
     	if(self::$vmAdminAreaStarted) return;
@@ -44,6 +44,7 @@ class AdminUIHelper {
 		$document->addStyleSheet($front.'css/chosen.css');
 		$document->addStyleSheet($front.'css/vtip.css');
 		$document->addStyleSheet($front.'css/jquery.fancybox-1.3.4.css');
+		$document->addStyleSheet($front.'css/ui/jquery.ui.all.css');
 		//$document->addStyleSheet($admin.'css/jqtransform.css');
 
 		//loading defaut script
@@ -83,7 +84,7 @@ class AdminUIHelper {
 //]]>
 		");
 		?>
-		<?php if (!self::$backEnd) echo '<div class="toolbar" style="height: 84px;position: relative;">'.vmView::getToolbar().'</div>'; ?>
+		<?php if (!self::$backEnd) echo '<div class="toolbar" style="height: 84px;position: relative;">'.vmView::getToolbar($vmView).'</div>'; ?>
 		<div class="virtuemart-admin-area">
 		<?php
 		// Include ALU System

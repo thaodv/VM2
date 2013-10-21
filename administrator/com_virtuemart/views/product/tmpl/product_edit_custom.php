@@ -24,7 +24,7 @@ if (isset($this->product->customfields_fromParent)) { ?>
 <?php } else {
 	?> <input type="hidden" name="save_customfields" value="1" />
 <?php }  ?>
-<table id="customfieldsTable" width="100%">
+<table class="adminform" id="customfieldsTable" width="100%">
 	<tr>
 		<td valign="top" width="%100">
 
